@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import worker,{normalize} from './worker/index.js';
+let count=0;const test=async(name,f)=>{await f();console.log('PASS '+name);count++};const req=(path)=>new Request('https://example.com'+path);const profile={basicInfo:{accountId:'12345678',nickname:'Joueur',level:60,region:'SG',rankingPoints:2500,liked:100},clanBasicInfo:{clanName:'Équipe'}};
+await test('Accueil avec CSP et langue française',async()=>{const r=await worker.fetch(req('/'));assert.equal(r.status,200);assert.ok(r.headers.get('content-security-policy'));assert.match(await r.text(),/lang="fr"/)});
+await test('UID invalide',async()=>assert.equal((await worker.fetch(req('/api/profile?uid=abc&region=sg'))).status,400));
+await test('Serveur invalide',async()=>assert.equal((await worker.fetch(req('/api/profile?uid=12345678&region=xx'))).status,400));
+await test('Aucun faux profil si clé absente',async()=>{const r=await worker.fetch(req('/api/profile?uid=12345678&region=sg'));assert.equal(r.status,503);const d=await r.json();assert.equal(d.code,'SOURCE_NOT_CONFIGURED');assert.equal(d.nickname,undefined)});
+await test('Protection de quota obligatoire',async()=>{const r=await worker.fetch(req('/api/profile?uid=12345678&region=sg'),{PROFILE_IMPORT_ENABLED:'true',FF_COMMUNITY_API_KEY:'fixture'});assert.equal((await r.json()).code,'RATE_LIMIT_NOT_CONFIGURED')});
+await test('Normalisation sans données privées',()=>{const p=normalize({...profile,email:'secret'},'12345678','sg');assert.equal(p.level,60);assert.equal(p.email,undefined);assert.equal(p.ownership,'unverified')});
+await test('Valeur absente conservée NULL',()=>assert.equal(normalize({basicInfo:{accountId:'12345678',nickname:'X'}},'12345678','sg').level,null));
+await test('UID source différent rejeté',()=>assert.throws(()=>normalize(profile,'99999999','sg')));
+await test('Nombres invalides rejetés comme absents',()=>assert.equal(normalize({basicInfo:{...profile.basicInfo,level:-1}},'12345678','sg').level,null));
+const env={PROFILE_IMPORT_ENABLED:'true',FF_COMMUNITY_API_KEY:'fixture',PROFILE_RATE_LIMITER:{limit:async()=>({success:true})}};const original=globalThis.fetch;
+try{await test('Adaptateur connecté à une fixture, clé côté serveur',async()=>{globalThis.fetch=async(url,opts)=>{assert.equal(new URL(url).hostname,'developers.freefirecommunity.com');assert.equal(opts.headers['x-api-key'],'fixture');return Response.json(profile)};const r=await worker.fetch(req('/api/profile?uid=12345678&region=sg'),env);assert.equal(r.status,200);assert.equal((await r.json()).nickname,'Joueur');assert.equal(r.headers.get('cache-control'),'no-store')});
+for(const [status,expected]of[[401,503],[403,503],[404,404],[429,429],[500,502]])await test('Erreur fournisseur '+status,async()=>{globalThis.fetch=async()=>new Response('',{status});assert.equal((await worker.fetch(req('/api/profile?uid=12345678&region=sg'),env)).status,expected)});
+await test('Erreur de schéma fournisseur',async()=>{globalThis.fetch=async()=>Response.json({foo:'bar'});assert.equal((await worker.fetch(req('/api/profile?uid=12345678&region=sg'),env)).status,502)});
+await test('Limite locale bloque avant accès fournisseur',async()=>{globalThis.fetch=()=>{throw new Error('Must not fetch')};assert.equal((await worker.fetch(req('/api/profile?uid=12345678&region=sg'),{...env,PROFILE_RATE_LIMITER:{limit:async()=>({success:false})}})).status,429)})}finally{globalThis.fetch=original}
+await test('Cache hors connexion exclut recherches API',async()=>{const s=await(await worker.fetch(req('/sw.js'))).text();assert.match(s,/!FILES.includes/);assert.ok(!s.includes("'/api/profile'"))});
+await test('Illustration disponible',async()=>{const r=await worker.fetch(req('/art.jpg'));assert.equal(r.headers.get('content-type'),'image/jpeg');assert.ok((await r.arrayBuffer()).byteLength>1000)});
+await test('Manifeste standalone',async()=>assert.equal((await(await worker.fetch(req('/manifest.webmanifest'))).json()).display,'standalone'));
+console.log(count+' tests passed; fixtures only, no live provider validation.');

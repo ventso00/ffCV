@@ -1,0 +1,6 @@
+dist/
+qa/
+node_modules/
+.env*
+*.tar.gz
+__pycache__/
