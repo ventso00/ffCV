@@ -1,21 +1,31 @@
 import assert from 'node:assert/strict';
-import worker,{normalize} from './worker/index.js';
-let count=0;const test=async(name,f)=>{await f();console.log('PASS '+name);count++};const req=(path)=>new Request('https://example.com'+path);const profile={basicInfo:{accountId:'12345678',nickname:'Joueur',level:60,region:'SG',rankingPoints:2500,liked:100},clanBasicInfo:{clanName:'Équipe'}};
-await test('Accueil avec CSP et langue française',async()=>{const r=await worker.fetch(req('/'));assert.equal(r.status,200);assert.ok(r.headers.get('content-security-policy'));assert.match(await r.text(),/lang="fr"/)});
+import worker,{normalize,readLimited} from './worker/index.js';
+let count=0,ip=0;const test=async(name,f)=>{await f();console.log('PASS '+name);count++};const req=(path,client=String(++ip))=>new Request('https://example.com'+path,{headers:{'CF-Connecting-IP':client}});const path='/api/profile?uid=12345678&region=sg';const profile={basicInfo:{accountId:'12345678',nickname:'Joueur',level:60,region:'SG',rankingPoints:2500,csRankingPoints:120,liked:100},clanBasicInfo:{clanName:'Équipe'},profileInfo:{avatarId:987}};
+await test('Accueil français avec CSP',async()=>{const r=await worker.fetch(req('/'));assert.equal(r.status,200);assert.ok(r.headers.get('content-security-policy'));assert.match(await r.text(),/lang="fr"/)});
 await test('UID invalide',async()=>assert.equal((await worker.fetch(req('/api/profile?uid=abc&region=sg'))).status,400));
 await test('Serveur invalide',async()=>assert.equal((await worker.fetch(req('/api/profile?uid=12345678&region=xx'))).status,400));
-await test('Aucun faux profil si clé absente',async()=>{const r=await worker.fetch(req('/api/profile?uid=12345678&region=sg'));assert.equal(r.status,503);const d=await r.json();assert.equal(d.code,'SOURCE_NOT_CONFIGURED');assert.equal(d.nickname,undefined)});
-await test('Protection de quota obligatoire',async()=>{const r=await worker.fetch(req('/api/profile?uid=12345678&region=sg'),{PROFILE_IMPORT_ENABLED:'true',FF_COMMUNITY_API_KEY:'fixture'});assert.equal((await r.json()).code,'RATE_LIMIT_NOT_CONFIGURED')});
-await test('Normalisation sans données privées',()=>{const p=normalize({...profile,email:'secret'},'12345678','sg');assert.equal(p.level,60);assert.equal(p.email,undefined);assert.equal(p.ownership,'unverified')});
+await test('Aucun profil inventé si clé absente',async()=>{const r=await worker.fetch(req(path));assert.equal(r.status,503);const d=await r.json();assert.equal(d.code,'SOURCE_NOT_CONFIGURED');assert.equal(d.nickname,undefined)});
+await test('Diagnostic sans clé: studio disponible et import indisponible',async()=>{const d=await(await worker.fetch(req('/api/status'))).json();assert.equal(d.studio.ready,true);assert.equal(d.profile.ready,false);assert.equal(d.outfit.ready,false)});
+const env={FF_COMMUNITY_API_KEY:'fixture-not-a-real-secret'};
+await test('Diagnostic configuré sans révéler la clé',async()=>{const s=await(await worker.fetch(req('/api/status'),env)).text();assert.equal(JSON.parse(s).profile.ready,true);assert.ok(!s.includes(env.FF_COMMUNITY_API_KEY))});
+await test('Désactivation explicite respectée',async()=>assert.equal((await worker.fetch(req(path),{...env,PROFILE_IMPORT_ENABLED:'false'})).status,503));
+await test('Normalisation limitée aux champs publics',()=>{const p=normalize({...profile,email:'secret'},'12345678','sg');assert.equal(p.level,60);assert.equal(p.csPoints,120);assert.equal(p.email,undefined);assert.equal(p.ownership,'unverified');assert.equal(p.characterImage,null);assert.equal(p.characterId,'987')});
 await test('Valeur absente conservée NULL',()=>assert.equal(normalize({basicInfo:{accountId:'12345678',nickname:'X'}},'12345678','sg').level,null));
 await test('UID source différent rejeté',()=>assert.throws(()=>normalize(profile,'99999999','sg')));
-await test('Nombres invalides rejetés comme absents',()=>assert.equal(normalize({basicInfo:{...profile.basicInfo,level:-1}},'12345678','sg').level,null));
-const env={PROFILE_IMPORT_ENABLED:'true',FF_COMMUNITY_API_KEY:'fixture',PROFILE_RATE_LIMITER:{limit:async()=>({success:true})}};const original=globalThis.fetch;
-try{await test('Adaptateur connecté à une fixture, clé côté serveur',async()=>{globalThis.fetch=async(url,opts)=>{assert.equal(new URL(url).hostname,'developers.freefirecommunity.com');assert.equal(opts.headers['x-api-key'],'fixture');return Response.json(profile)};const r=await worker.fetch(req('/api/profile?uid=12345678&region=sg'),env);assert.equal(r.status,200);assert.equal((await r.json()).nickname,'Joueur');assert.equal(r.headers.get('cache-control'),'no-store')});
-for(const [status,expected]of[[401,503],[403,503],[404,404],[429,429],[500,502]])await test('Erreur fournisseur '+status,async()=>{globalThis.fetch=async()=>new Response('',{status});assert.equal((await worker.fetch(req('/api/profile?uid=12345678&region=sg'),env)).status,expected)});
-await test('Erreur de schéma fournisseur',async()=>{globalThis.fetch=async()=>Response.json({foo:'bar'});assert.equal((await worker.fetch(req('/api/profile?uid=12345678&region=sg'),env)).status,502)});
-await test('Limite locale bloque avant accès fournisseur',async()=>{globalThis.fetch=()=>{throw new Error('Must not fetch')};assert.equal((await worker.fetch(req('/api/profile?uid=12345678&region=sg'),{...env,PROFILE_RATE_LIMITER:{limit:async()=>({success:false})}})).status,429)})}finally{globalThis.fetch=original}
-await test('Cache hors connexion exclut recherches API',async()=>{const s=await(await worker.fetch(req('/sw.js'))).text();assert.match(s,/!FILES.includes/);assert.ok(!s.includes("'/api/profile'"))});
-await test('Illustration disponible',async()=>{const r=await worker.fetch(req('/art.jpg'));assert.equal(r.headers.get('content-type'),'image/jpeg');assert.ok((await r.arrayBuffer()).byteLength>1000)});
-await test('Manifeste standalone',async()=>assert.equal((await(await worker.fetch(req('/manifest.webmanifest'))).json()).display,'standalone'));
-console.log(count+' tests passed; fixtures only, no live provider validation.');
+await test('Pseudo vide rejeté',()=>assert.throws(()=>normalize({basicInfo:{accountId:'12345678',nickname:' '}},'12345678','sg')));
+await test('Nombres invalides restent absents',()=>{for(const level of [-1,Infinity,NaN,'60'])assert.equal(normalize({basicInfo:{...profile.basicInfo,level}},'12345678','sg').level,null)});
+await test('Flux trop volumineux interrompu',async()=>await assert.rejects(readLimited(new Response('x'.repeat(32)),16),/RESPONSE_TOO_LARGE/));
+await test('Flux UTF-8 valide décodé',async()=>assert.equal(await readLimited(new Response('Équipe')),'Équipe'));
+const original=globalThis.fetch;
+try{
+await test('Adaptateur avec fixture, clé uniquement côté serveur',async()=>{globalThis.fetch=async(url,opts)=>{assert.equal(new URL(url).hostname,'developers.freefirecommunity.com');assert.equal(opts.headers['x-api-key'],env.FF_COMMUNITY_API_KEY);assert.equal(opts.redirect,'error');return Response.json(profile)};const r=await worker.fetch(req(path),env);assert.equal(r.status,200);assert.equal((await r.json()).nickname,'Joueur');assert.equal(r.headers.get('cache-control'),'no-store')});
+for(const [status,expected]of[[401,503],[403,503],[404,404],[429,429],[500,502]])await test('Erreur fournisseur '+status,async()=>{globalThis.fetch=async()=>new Response('',{status});assert.equal((await worker.fetch(req(path),env)).status,expected)});
+for(const [label,body,type]of[['Schéma inconnu','{"foo":1}','application/json'],['HTML retourné','<h1>Error</h1>','text/html'],['JSON invalide','{','application/json'],['UID incohérent',JSON.stringify({...profile,basicInfo:{...profile.basicInfo,accountId:'99999999'}}),'application/json']])await test(label+' rejeté',async()=>{globalThis.fetch=async()=>new Response(body,{headers:{'content-type':type}});assert.equal((await worker.fetch(req(path),env)).status,502)});
+await test('Panne réseau gérée',async()=>{globalThis.fetch=async()=>{throw new Error('network')};assert.equal((await worker.fetch(req(path),env)).status,502)});
+await test('Limite 6 recherches/minute par IP locale',async()=>{let calls=0;globalThis.fetch=async()=>{calls++;return Response.json(profile)};for(let n=0;n<6;n++)assert.equal((await worker.fetch(req(path,'quota-test'),env)).status,200);assert.equal((await worker.fetch(req(path,'quota-test'),env)).status,429);assert.equal(calls,6)});
+}finally{globalThis.fetch=original}
+await test('Cache navigateur exclut les API',async()=>{const s=await(await worker.fetch(req('/sw.js'))).text();assert.match(s,/!FILES.includes/);assert.ok(!s.includes("'/api/profile'"));assert.ok(!s.includes("'/api/status'"))});
+for(const asset of ['/card-background.webp','/concept-cutout.webp'])await test('Calque graphique '+asset,async()=>{const r=await worker.fetch(req(asset));assert.equal(r.headers.get('content-type'),'image/webp');assert.ok((await r.arrayBuffer()).byteLength>1000)});
+await test('Manifeste Android standalone et icônes PNG',async()=>{const m=await(await worker.fetch(req('/manifest.webmanifest'))).json();assert.equal(m.display,'standalone');for(const i of m.icons)assert.equal((await worker.fetch(req(i.src))).headers.get('content-type'),'image/png')});
+await test('Méthodes et routes inconnues rejetées',async()=>{assert.equal((await worker.fetch(new Request('https://example.com/',{method:'POST'}))).status,405);assert.equal((await worker.fetch(req('/unknown'))).status,404)});
+console.log(count+' tests passed; provider tests use fixtures, not live authenticated accounts.');

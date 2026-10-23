@@ -1,36 +1,34 @@
-# FF ScoutMetrics — Identity Studio V0.2
+# ScoutMetrics Player Studio — pilote privé v0.3
 
-Prototype privé issu des deux références visuelles fournies par Ventso. Ce dépôt est un complément à FF_ScoutMetrics_Dossier_Master_V2.md, pas une implémentation du recrutement complet.
+Landing SaaS gaming, CV éditable en calques, aperçu en perspective CSS, export PNG/PDF et base PWA Android. Le personnage conceptuel et les statistiques d'exemple sont explicitement fictifs. Le relief est un effet de carte 3D CSS ; aucun modèle 3D du personnage n'est chargé.
 
-## Réalisation
-- Landing responsive, fond sombre, lime/rose/bleu, perspective CSS et mouvement réduit.
-- Dialogue de profil et source visible ; aucune requête réelle remplacée par la démo.
-- Carte à effet 3D, sélection couleur, illustration conceptuelle initiale, import local de personnage.
-- PNG 1080×1350 via Canvas ; impression PDF navigateur ; Web Share avec repli téléchargement.
-- PWA avec manifeste, icônes PNG et service worker excluant les réponses API.
-- Connecteur serveur public Free Fire Community API, désactivé par défaut, normalisation stricte et erreurs typées.
+## Développement et validation
 
-## Construire et vérifier
-Le Worker déployable est déjà suivi dans worker/index.js et ne dépend d’aucun package externe.
-Pour régénérer après modification : `python3 assemble.py` (Python standard uniquement).
-`node --check app.js`
-`node tests.mjs` : 20 tests serveur, fournisseur simulé.
-`bash scripts/build.sh`
-`node scripts/validate-artifact.mjs`
+- `python3 assemble.py` : compile HTML/CSS/JS et images optimisées dans le Worker autonome.
+- `npm test` : 31 tests backend, avec réponses fournisseur simulées pour les parcours authentifiés.
+- `npm run build` puis `npm run validate` : valide l'artefact Sites.
+- `npm run dev` : serveur local utilisant le vrai Worker. `/mobile-check` sert seulement au contrôle responsive ; cette route n'est pas déployée.
 
-L'image assets/concept-reference.jpg est la référence utilisateur incorporée comme illustration de démonstration, pas un asset Free Fire certifié. Confirmer les droits avant diffusion publique. Les icônes sont générées localement. Ne pas exposer qa/ : copie statique temporaire servant uniquement la vérification UI, sans backend.
+Aucune dépendance npm externe. Utilisation de Canvas 2D, CSS, Web Share et Service Worker natifs. Exports PNG 1080×1350 / 1080×1920 / 1080×1080. PDF raster incorporant la carte ; ce n'est pas un CV textuel ATS.
 
-## Activation des données réelles — non effectuée
-1. Obtenir un accès fournisseur qui permet l’usage prévu, la conservation et l’affichage ; aucun compte ou achat n’a été effectué.
-2. Tester UID + serveur sur comptes de volontaires et comparer avec le jeu, dont un compte réellement utilisé à Madagascar. Le serveur n’est pas inféré du pays.
-3. Configurer uniquement côté serveur FF_COMMUNITY_API_KEY et PROFILE_IMPORT_ENABLED=true.
-4. Fournir une liaison de limitation de débit PROFILE_RATE_LIMITER compatible avec `.limit({key})` et configurée côté hébergement. Le connecteur refuse autrement de démarrer. Aucun mapping automatique de cette liaison dans Sites n’est livré : valider son support ou utiliser un mécanisme durable équivalent avant activation.
-5. Définir les budgets, consentements et protections d’accès ; rejouer les tests et réaliser la recette source réelle. Ne pas activer sur la seule présence de la clé.
+## Import réel
 
-GET /api/profile?uid=...&region=sg|ind|br|me|eu|bd|pk. UID 5–15 chiffres : règle syntaxique spécifique au fournisseur, pas preuve d'existence. La liste régionale doit être validée par le fournisseur avant ouverture. Une requête /info seulement ; pas de stats détaillées ou de récupération de comptes privés. Le serveur conserve UID en chaîne et n'exporte qu'une liste blanche : UID, pseudo, serveur, niveau, points BR, likes, guilde et provenance. Aucune déduction du rang par nom, du K/D, de la propriété, du talent ou du véritable personnage 3D.
+Configurer `FF_COMMUNITY_API_KEY` comme secret d'environnement Sites puis redéployer. `PROFILE_IMPORT_ENABLED=false` désactive explicitement l'import ; sa présence n'est pas requise pour activer une clé valide. Aucun secret côté navigateur. Fournisseur actuel : https://developers.freefirecommunity.com/api/v1/info, entête `x-api-key`, UID et région explicites.
 
-## Android
-La PWA nécessite HTTPS et un navigateur compatible ; installation physique et hors connexion non validées sur Android. L’accès privé peut limiter l’installation. Aucun APK signé construit. Étape suivante : empaquetage Capacitor, Android Studio, cible Android conforme aux règles Google Play en vigueur, tests appareils, signature puis distribution choisie. Ne jamais embarquer une clé API dans l’APK.
+Le test direct sans clé a répondu 401 AUTH_001. Aucun compte authentifié n'a été importé pendant cette intervention. Une clé valide doit encore être testée avec un UID et son serveur réellement connus. La région ME proposée ne garantit pas le serveur d'un compte malgache. Aucun accès aux mots de passe, messages, identité civile ou autre donnée privée.
 
-## Limites du prototype
-Pas de comptes, publication persistante de profils, stockage DB, vérification de propriété, historique, recrutement, PDF serveur ni personnage 3D réel. UI testée dans Chrome desktop ; CSS responsive écrit mais pas validé sur appareil Android physique. Import réel non testé sans accès fournisseur. Aucun niveau d'exactitude absolu promis.
+Contrôles : UID exact, pseudonyme non vide, nombres valides ou null, taille de réponse plafonnée à 200 Ko, délai de 9 s, erreurs fournisseur explicites, cache serveur 5 minutes. Limite 6 recherches/minute/IP dans la mémoire d'un isolate : protection de proximité, non globale et non durable. Ajouter une vraie limitation distribuée avant ouverture publique et suivre les quotas fournisseur.
+
+## Personnage réel
+
+Aucun service de rendu de tenue n'a passé une validation réelle. `characterImage` reste null. L'UID ou un ID d'avatar ne suffit pas à reconstruire la tenue exacte. Le joueur peut importer sa propre image PNG/JPEG/WebP (5 Mo, 16 Mpx maximum), puis ajuster taille et position localement. Le personnage d'exemple n'est jamais substitué à celui d'un profil importé.
+
+## Données locales et Android
+
+Le brouillon est enregistré explicitement dans localStorage. L'image n'est pas conservée après rechargement et doit être réimportée. Les informations restaurées sont traitées comme déclarées. Les données démo sont vidées à la première modification pour éviter toute contamination des vrais CV. Les API ne sont pas mises en cache par le Service Worker. Le manifeste et les icônes permettent une installation PWA dans un navigateur compatible ; installation physique Android, APK signé et publication Play Store restent à réaliser/valider.
+
+## Contrôles effectués
+
+31 tests serveur réussis. Vérifications UI : import sans clé et repli, saisie des champs, image locale, formats Post/Carré/Story, thème Neon, brouillon enregistré et restauré, réduction d'animations. Responsive à 375 px utiles : scrollWidth = clientWidth après correction du débordement décoratif. Structure du PDF produite par le sérialiseur réel validée par pdfinfo/Poppler sur image de test.
+
+Limite QA : le navigateur cloud n'a pas remis les téléchargements au contrôleur. La génération et les liens existent dans l'UI, mais l'enregistrement final PNG/PDF et le partage Android demandent une recette sur appareil. Ne pas annoncer une validation terrain Madagascar ni un import authentifié réussi.
