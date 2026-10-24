@@ -1,10 +1,10 @@
-# ScoutMetrics Player Studio — pilote privé v0.3
+# ScoutMetrics Player Studio — pilote privé v0.4
 
 Landing SaaS gaming, CV éditable en calques, aperçu en perspective CSS, export PNG/PDF et base PWA Android. Le personnage conceptuel et les statistiques d'exemple sont explicitement fictifs. Le relief est un effet de carte 3D CSS ; aucun modèle 3D du personnage n'est chargé.
 
 ## Développement et validation
 
-- `python3 assemble.py` : compile HTML/CSS/JS et images optimisées dans le Worker autonome.
+- `npm run build` (ou `python assemble.py`) : compile HTML/CSS/JS et images optimisées dans le Worker autonome.
 - `npm test` : 31 tests backend, avec réponses fournisseur simulées pour les parcours authentifiés.
 - `npm run build` puis `npm run validate` : valide l'artefact Sites.
 - `npm run dev` : serveur local utilisant le vrai Worker. `/mobile-check` sert seulement au contrôle responsive ; cette route n'est pas déployée.
@@ -32,3 +32,9 @@ Le brouillon est enregistré explicitement dans localStorage. L'image n'est pas 
 31 tests serveur réussis. Vérifications UI : import sans clé et repli, saisie des champs, image locale, formats Post/Carré/Story, thème Neon, brouillon enregistré et restauré, réduction d'animations. Responsive à 375 px utiles : scrollWidth = clientWidth après correction du débordement décoratif. Structure du PDF produite par le sérialiseur réel validée par pdfinfo/Poppler sur image de test.
 
 Limite QA : le navigateur cloud n'a pas remis les téléchargements au contrôleur. La génération et les liens existent dans l'UI, mais l'enregistrement final PNG/PDF et le partage Android demandent une recette sur appareil. Ne pas annoncer une validation terrain Madagascar ni un import authentifié réussi.
+
+## Version 0.4
+
+Dossier public étendu avec provenance champ par champ, export JSON, import JSON local contrôlé par UID, analyse à règles explicites, style adapté au niveau et image d’inspiration locale. Animation de carte en perspective CSS (pas un modèle 3D du personnage). Les imports manuels ne sont jamais certifiés. Voir SOURCES.md.
+
+`node model-tests.mjs` vérifie le module partagé navigateur/serveur. Le serveur local accepte FF_COMMUNITY_API_KEY et PROFILE_IMPORT_ENABLED depuis son environnement ; aucun secret n’est enregistré dans le dépôt. Redémarrer le serveur après compilation.
