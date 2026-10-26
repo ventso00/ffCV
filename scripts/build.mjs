@@ -3,7 +3,7 @@ const root=new URL('../',import.meta.url);
 const read=p=>readFile(new URL(p,root),'utf8');
 const assets={};
 for(const [name,type] of [['card-background.webp','image/webp'],['concept-cutout.webp','image/webp'],['icon-192.png','image/png'],['icon-512.png','image/png']]) assets['/'+name]={base64:(await readFile(new URL('assets/'+name,root))).toString('base64'),type};
-const source='const page='+JSON.stringify(await read('page.html'))+';\nconst app='+JSON.stringify(await read('app.js'))+';\nconst css='+JSON.stringify(await read('style.css'))+';\nconst model='+JSON.stringify(await read('profile-model.js'))+';\nconst assets='+JSON.stringify(assets)+';\n'+(await read('profile-model.js')).replaceAll('export ','')+'\n'+(await read('pilot-policy.js')).replaceAll('export ','')+'\n'+await read('server.js');
+const source='const fallbackProfile='+JSON.stringify(JSON.parse(await read('fixtures/josiabira.json')))+';\n'+'const page='+JSON.stringify(await read('page.html'))+';\nconst app='+JSON.stringify(await read('app.js'))+';\nconst css='+JSON.stringify(await read('style.css'))+';\nconst model='+JSON.stringify(await read('profile-model.js'))+';\nconst assets='+JSON.stringify(assets)+';\n'+(await read('profile-model.js')).replaceAll('export ','')+'\n'+(await read('pilot-policy.js')).replaceAll('export ','')+'\n'+(await read('protobuf-gateway.js')).replaceAll('export ','')+'\n'+await read('server.js');
 await mkdir(new URL('worker/',root),{recursive:true});
 await mkdir(new URL('dist/server/',root),{recursive:true});
 await mkdir(new URL('dist/.openai/',root),{recursive:true});

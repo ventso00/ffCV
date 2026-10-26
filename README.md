@@ -9,3 +9,5 @@ Données : Community API pour les profils ; adaptateur MooGold optionnel pour la
 Le schéma SQL est fourni, non déployé. Les contrôles locaux et fournisseurs simulés ne constituent pas une recette terrain. L’animation est celle de la carte en perspective CSS, pas un personnage 3D.
 
 Mise à jour 26 octobre : voir docs/AUDIT-2026-10-26.md. Saisie UID seule, résolution de région backend, deux UID admis sur déclaration. Tests supplémentaires : node uid-only-tests.mjs. Aucun profil réel extrait sans accès fournisseur.
+
+Secours local demandé : voir docs/FALLBACK-PROTOBUF.md. Fixture réelle partielle pour JosiaBira, étiquetée local_snapshot ; aucune statistique inventée. Adaptateur HTTP de passerelle Protobuf prêt, accès en direct non validé. Tests : node fallback-tests.mjs.

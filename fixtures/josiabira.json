@@ -1,0 +1,23 @@
+{
+  "uid": "8678687120",
+  "nickname": "JosiaBira",
+  "region": null,
+  "level": null,
+  "rankPoints": null,
+  "csPoints": null,
+  "likes": null,
+  "guild": null,
+  "characterId": null,
+  "characterImage": null,
+  "dossier": {},
+  "source": "Shop2Game · observation du 26/10/2026 · secours local",
+  "sourceUrl": "https://shop2game.com/",
+  "fetchedAt": "2026-10-26T05:21:26.513Z",
+  "demo": false,
+  "ownership": "unverified",
+  "readonly": true,
+  "status": "partial",
+  "dataMode": "local_snapshot",
+  "live": false,
+  "notice": "MODE SECOURS LOCAL — pseudo observé sur Shop2Game le 26/10/2026. Aucune actualisation en direct. Niveau, statistiques et personnage indisponibles."
+}
