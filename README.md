@@ -7,3 +7,5 @@ Build : npm run build. Validation : npm test, node model-tests.mjs, node pilot-t
 Données : Community API pour les profils ; adaptateur MooGold optionnel pour la validation UID/pseudo seulement. Aucun paiement exécuté. Aucun partenaire réellement activé ni compte malgache importé à ce stade. Voir SOURCES.md pour l’étude initiale ; les imports déclaratifs qui y sont mentionnés ont été retirés du parcours utilisateur.
 
 Le schéma SQL est fourni, non déployé. Les contrôles locaux et fournisseurs simulés ne constituent pas une recette terrain. L’animation est celle de la carte en perspective CSS, pas un personnage 3D.
+
+Mise à jour 26 octobre : voir docs/AUDIT-2026-10-26.md. Saisie UID seule, résolution de région backend, deux UID admis sur déclaration. Tests supplémentaires : node uid-only-tests.mjs. Aucun profil réel extrait sans accès fournisseur.
