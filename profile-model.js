@@ -7,10 +7,10 @@ export function analyzeProfile(p) {
   const style = level === null ? {name:'À personnaliser',theme:'solar',headline:['YOUR','STORY.']} : level < 30 ? {name:'Premiers pas',theme:'ice',headline:['NEW','WAVE.']} : level < 60 ? {name:'Parcours confirmé',theme:'solar',headline:['NEXT','LEVEL.']} : {name:'Long parcours',theme:'neon',headline:['PLAYER','LEGACY.']};
   const observations = [level === null ? 'Le niveau manque : la direction artistique reste libre.' : `Niveau ${level} : direction « ${style.name} ». Le niveau mesure la progression du compte, pas à lui seul le talent.`, present(p.rankPoints) ? `${p.rankPoints} points BR disponibles. La saison et le serveur sont nécessaires pour une comparaison fiable.` : 'Points BR absents : aucun classement compétitif déduit.', present(p.csPoints) ? `${p.csPoints} points CS disponibles, séparés des points BR.` : 'Points CS absents : aucun résultat Clash Squad déduit.'];
   const next = [];
-  if (!present(p.characterName)) next.push('Préciser le personnage utilisé et ajouter sa capture.');
-  if (!present(p.availability)) next.push('Ajouter tes créneaux en heure de Madagascar (UTC+3).');
-  if (!present(p.role) || p.role === 'À préciser') next.push('Choisir ton rôle en équipe à partir de ton expérience.');
-  next.push('Joindre des résultats ou captures de matchs pour documenter tes performances.');
+  if (!present(p.characterName)) next.push('Personnage indisponible : attendre une source de rendu liée au compte.');
+  if (!present(p.availability)) next.push('Disponibilités non fournies par la source.');
+  if (!present(p.role) || p.role === 'À préciser') next.push('Rôle non déterminé : aucune spécialité attribuée automatiquement.');
+  next.push('Les performances détaillées nécessitent une source de statistiques de matchs validée.');
   return {completed,total:keys.length,percent:Math.round(100*completed/keys.length),style,observations,next};
 }
 

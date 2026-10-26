@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import worker,{normalize,readLimited} from './worker/index.js';
+import actual,{normalize,readLimited} from './worker/index.js';
+const worker={fetch:(request,env={},ctx={})=>actual.fetch(request,{MG_PILOT_ROSTER:JSON.stringify({'12345678':{country:'MG',status:'approved',region:'sg'}}),...env},ctx)};
 let count=0,ip=0;const test=async(name,f)=>{await f();console.log('PASS '+name);count++};const req=(path,client=String(++ip))=>new Request('https://example.com'+path,{headers:{'CF-Connecting-IP':client}});const path='/api/profile?uid=12345678&region=sg';const profile={basicInfo:{accountId:'12345678',nickname:'Joueur',level:60,region:'SG',rankingPoints:2500,csRankingPoints:120,liked:100},clanBasicInfo:{clanName:'Équipe'},profileInfo:{avatarId:987}};
 await test('Accueil français avec CSP',async()=>{const r=await worker.fetch(req('/'));assert.equal(r.status,200);assert.ok(r.headers.get('content-security-policy'));assert.match(await r.text(),/lang="fr"/)});
 await test('UID invalide',async()=>assert.equal((await worker.fetch(req('/api/profile?uid=abc&region=sg'))).status,400));
