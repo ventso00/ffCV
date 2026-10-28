@@ -10,7 +10,7 @@ assert.equal(p.fetchedAt,'2026-10-26T05:21:26.513Z');
 assert.equal((await lookup({PROFILE_TEST_FALLBACK:'false'})).status,503);
 assert.equal((await lookup({PROFILE_IMPORT_ENABLED:'false'})).status,503);
 assert.equal((await lookup({},'23146856')).status,503);
-assert.equal((await lookup({},'55555555')).status,403);
+const other=await lookup({},'55555555'); assert.equal(other.status,503); assert.equal((await other.json()).code,'SOURCE_NOT_CONFIGURED');
 assert.equal((await lookup({MG_PILOT_ROSTER:'{}'})).status,403);
 const saved=globalThis.fetch;
 try {

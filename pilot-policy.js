@@ -1,12 +1,13 @@
 // Admission is an administrative decision, never inferred from an UID prefix.
 export function pilotAdmission(env, uid, requestedRegion) {
+  if (!env.MG_PILOT_ROSTER) return {region:requestedRegion || 'auto',admission:'OPEN_LOOKUP'};
   let roster;
-  try { roster = JSON.parse(env.MG_PILOT_ROSTER || JSON.stringify({'8678687120':{country:'MG',status:'approved',region:'auto'},'23146856':{country:'MG',status:'approved',region:'auto'}})); } catch { return {status:503,code:'PILOT_CONFIG_INVALID',message:'La configuration du pilote doit être corrigée.'}; }
+  try { roster = JSON.parse(env.MG_PILOT_ROSTER); } catch { return {status:503,code:'PILOT_CONFIG_INVALID',message:'La configuration du pilote doit être corrigée.'}; }
   if(!roster||typeof roster!=='object'||Array.isArray(roster))return {status:503,code:'PILOT_CONFIG_INVALID',message:'Configuration du pilote invalide.'};
   const entry = Object.hasOwn(roster,uid) ? roster[uid] : null;
   if (!entry || entry.country !== 'MG' || entry.status !== 'approved' || ! /^(auto|[a-z]{2,3})$/.test(entry.region || '')) return {status:403,code:'MADAGASCAR_APPROVAL_REQUIRED',message:'Cet UID n’est pas encore admis au pilote Madagascar. Une vérification locale est nécessaire avant la création du CV.'};
   if (requestedRegion && requestedRegion !== entry.region) return {status:400,code:'REGION_MISMATCH',message:'Le serveur ne correspond pas à celui validé pour cet UID.'};
-  return {region:entry.region};
+  return {region:entry.region,admission:'MG_PILOT_APPROVED'};
 }
 export async function validateMooGold(uid, env, fetcher=fetch) {
   if(!env.MOOGOLD_PARTNER_ID || !env.MOOGOLD_SECRET || !env.MOOGOLD_FF_PRODUCT_ID) throw new Error('PARTNER_NOT_CONFIGURED');
