@@ -11,3 +11,11 @@ Le schéma SQL est fourni, non déployé. Les contrôles locaux et fournisseurs 
 Mise à jour 26 octobre : voir docs/AUDIT-2026-10-26.md. Saisie UID seule, résolution de région backend, deux UID admis sur déclaration. Tests supplémentaires : node uid-only-tests.mjs. Aucun profil réel extrait sans accès fournisseur.
 
 Secours local demandé : voir docs/FALLBACK-PROTOBUF.md. Fixture réelle partielle pour JosiaBira, étiquetée local_snapshot ; aucune statistique inventée. Adaptateur HTTP de passerelle Protobuf prêt, accès en direct non validé. Tests : node fallback-tests.mjs.
+
+## Déploiement Netlify
+
+Le dépôt ffCV contient netlify.toml : build npm run build:netlify, dossier publié netlify-public, fonctions netlify/functions, Node 22. La fonction scoutmetrics sert le frontend et les routes API. Ne pas publier dist/ directement : ce dossier contient le backend.
+
+Les variables fournisseur sont à configurer dans Netlify (scope Functions). Sans identifiants fournisseur, seul le secours local partiel de JosiaBira est disponible. Le rate-limit est en mémoire par instance et ne constitue pas un quota global distribué. La recherche est ouverte aux UID valides par défaut ; MG_PILOT_ROSTER est une restriction facultative. Voir docs/UID-LOOKUP-FIX.md.
+
+Validation : npm run build:netlify puis npm run test:netlify et npm test.

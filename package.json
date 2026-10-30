@@ -6,6 +6,8 @@
     "build": "node scripts/build.mjs",
     "validate": "node scripts/validate-artifact.mjs",
     "dev": "node dev-server.mjs",
-    "test": "node tests.mjs"
+    "test": "node tests.mjs",
+    "build:netlify": "node scripts/build-netlify.mjs",
+    "test:netlify": "node netlify-tests.mjs"
   }
 }

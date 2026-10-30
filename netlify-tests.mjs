@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import handler from './netlify/functions/scoutmetrics.mjs';
+const req=path=>new Request('https://ffcv.example'+path);
+let r=await handler(req('/'),{ip:'home'});assert.equal(r.status,200);assert.ok(r.headers.get('content-security-policy'));assert.ok((await r.text()).includes('Profil en lecture seule.'));
+r=await handler(req('/api/v1/player/8678687120'),{ip:'josia'});const p=await r.json();assert.equal(p.nickname,'JosiaBira');assert.equal(p.live,false);assert.equal(p.characterImage,null);
+r=await handler(req('/api/v1/player/55555555'),{ip:'other'});assert.equal(r.status,503);
+for(let i=0;i<6;i++)assert.equal((await handler(new Request('https://ffcv.example/api/v1/player/8678687120',{headers:{'CF-Connecting-IP':'fake-'+i}}),{ip:'one-client'})).status,200);
+assert.equal((await handler(req('/api/v1/player/8678687120'),{ip:'one-client'})).status,429);
+assert.equal((await handler(req('/worker/index.js'),{ip:'source'})).status,404);
+console.log('Netlify adapter: HTML/CSP, read-only snapshot, missing provider, trusted IP quota, backend source inaccessible.');
