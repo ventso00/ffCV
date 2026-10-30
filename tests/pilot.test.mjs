@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import worker from './worker/index.js';
-import {pilotAdmission,validateMooGold} from './pilot-policy.js';
+import worker from '../dist/server/index.js';
+import {pilotAdmission,validateMooGold} from '../backend/services/pilot-policy.js';
 import {createHmac} from 'node:crypto';
 const MG_PILOT_ROSTER=JSON.stringify({'12345678':{country:'MG',status:'approved',region:'sg'}});
 const req=(path,method='GET')=>new Request('https://example.com'+path,{method});

@@ -1,21 +1,48 @@
-# ScoutMetrics — pilote Madagascar en lecture seule
+# FF CV — ScoutMetrics Madagascar
 
-Documentation actuelle : docs/ARCHITECTURE.md. Les anciens parcours de saisie, import JSON personnel et restauration de données sont désactivés. Seuls les profils récupérés par le serveur après admission locale peuvent être exportés. La démo est illustrative et non exportable.
+Application de création de CV Free Fire en lecture seule. L'utilisateur saisit son UID, sans choix de serveur ; le backend interroge la source configurée. Le design du CV reste personnalisable, les informations du joueur et son personnage sont verrouillés.
 
-Build : npm run build. Validation : npm test, node model-tests.mjs, node pilot-tests.mjs, npm run validate. Développement : npm run dev. Les secrets et MG_PILOT_ROSTER se configurent dans l’environnement serveur.
+## Organisation
 
-Données : Community API pour les profils ; adaptateur MooGold optionnel pour la validation UID/pseudo seulement. Aucun paiement exécuté. Aucun partenaire réellement activé ni compte malgache importé à ce stade. Voir SOURCES.md pour l’étude initiale ; les imports déclaratifs qui y sont mentionnés ont été retirés du parcours utilisateur.
+| Dossier | Responsabilité |
+| --- | --- |
+| frontend/ | Page, interactions, styles, images et polices |
+| backend/ | Routes HTTP, services fournisseurs et secours local |
+| shared/ | Normalisation et analyse du profil partagées |
+| netlify/functions/ | Adaptateur serveur Netlify |
+| database/ | Schéma SQL proposé, non déployé |
+| tests/ | Tests API, données, admission, secours et Netlify |
+| scripts/ | Build, serveur local et exécution des tests |
+| docs/ | Architecture, déploiement, API et rapports |
+| dist/ | Backend généré, ignoré par Git |
+| netlify-public/ | Répertoire public généré pour Netlify |
 
-Le schéma SQL est fourni, non déployé. Les contrôles locaux et fournisseurs simulés ne constituent pas une recette terrain. L’animation est celle de la carte en perspective CSS, pas un personnage 3D.
+## Démarrage
 
-Mise à jour 26 octobre : voir docs/AUDIT-2026-10-26.md. Saisie UID seule, résolution de région backend, deux UID admis sur déclaration. Tests supplémentaires : node uid-only-tests.mjs. Aucun profil réel extrait sans accès fournisseur.
+Node.js 22 ou supérieur. Aucune dépendance npm à installer pour le développement local.
 
-Secours local demandé : voir docs/FALLBACK-PROTOBUF.md. Fixture réelle partielle pour JosiaBira, étiquetée local_snapshot ; aucune statistique inventée. Adaptateur HTTP de passerelle Protobuf prêt, accès en direct non validé. Tests : node fallback-tests.mjs.
+1. Copier .env.example vers .env si nécessaire.
+2. Lancer npm run dev.
+3. Ouvrir http://localhost:4173.
 
-## Déploiement Netlify
+## Commandes
 
-Le dépôt ffCV contient netlify.toml : build npm run build:netlify, dossier publié netlify-public, fonctions netlify/functions, Node 22. La fonction scoutmetrics sert le frontend et les routes API. Ne pas publier dist/ directement : ce dossier contient le backend.
+- npm test : reconstruit le backend et lance toutes les suites.
+- npm run build:netlify : prépare le backend et le répertoire public.
+- npm run validate : vérifie le module serveur généré.
 
-Les variables fournisseur sont à configurer dans Netlify (scope Functions). Sans identifiants fournisseur, seul le secours local partiel de JosiaBira est disponible. Le rate-limit est en mémoire par instance et ne constitue pas un quota global distribué. La recherche est ouverte aux UID valides par défaut ; MG_PILOT_ROSTER est une restriction facultative. Voir docs/UID-LOOKUP-FIX.md.
+## État réel des données
 
-Validation : npm run build:netlify puis npm run test:netlify et npm test.
+Sans accès fournisseur, seul le secours local partiel de JosiaBira (UID 8678687120) est disponible. Il est daté, explicitement signalé et ne contient ni statistiques ni personnage inventés. Les autres UID nécessitent une source configurée. Un UID ne prouve pas une localisation à Madagascar.
+
+La recharge est une simulation sans paiement. Le schéma SQL n'est pas connecté à une base active. La présentation animée concerne la carte, pas un modèle 3D du personnage.
+
+## Documentation
+
+- [Architecture actuelle](docs/PROJECT-STRUCTURE.md)
+- [Déploiement Netlify](docs/DEPLOYMENT.md)
+- [API et configuration](docs/API.md)
+- [Étude des sources](docs/SOURCES.md)
+- [Secours et passerelle Protobuf](docs/FALLBACK-PROTOBUF.md)
+
+Les rapports datés conservent l'historique du projet ; leurs anciens chemins et commandes peuvent avoir changé.

@@ -7,3 +7,6 @@ __pycache__/
 
 .netlify/
 netlify-public/
+
+worker/
+!.env.example

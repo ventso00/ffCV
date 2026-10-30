@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {analyzeProfile,normalize} from './profile-model.js';
+import {analyzeProfile,normalize} from '../shared/profile-model.js';
 for(const [level,theme]of [[null,'solar'],[29,'ice'],[30,'solar'],[59,'solar'],[60,'neon']])assert.equal(analyzeProfile({level}).style.theme,theme);
 assert.equal(analyzeProfile({}).completed,0);
 const p=normalize({basicInfo:{accountId:'12345678',nickname:'Fixture',level:30},profileInfo:{clothes:[123,'456',{},'bad']},petInfo:{level:-1},email:'private'},'12345678','sg');

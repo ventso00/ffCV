@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import worker from './worker/index.js';
+import worker from '../dist/server/index.js';
 import {readFileSync} from 'node:fs';
 const request=uid=>new Request('https://example.com/api/v1/player/'+uid);
 for(const uid of ['8678687120','23146856']) {
@@ -20,7 +20,7 @@ try {
   assert.equal((await worker.fetch(request('23146856'),{FF_COMMUNITY_API_KEY:'fixture',PROFILE_TEST_FALLBACK:'false'})).status,503);
   assert.equal(calls,1);
 }finally{globalThis.fetch=saved}
-const html=readFileSync(new URL('./page.html',import.meta.url),'utf8');
+const html=readFileSync(new URL('../frontend/index.html',import.meta.url),'utf8');
 assert.ok(!html.includes('id="region"'));
 assert.ok(html.includes('Profil en lecture seule. Pseudo, niveau et statistiques proviennent de la source ; tu ne peux pas les modifier ici.'));
 console.log('UID-only: both pilot IDs, backend region fallback, stop on auth error, no invented skin, no server selector, mandatory notice.');

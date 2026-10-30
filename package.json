@@ -4,10 +4,15 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "validate": "node scripts/validate-artifact.mjs",
-    "dev": "node dev-server.mjs",
-    "test": "node tests.mjs",
     "build:netlify": "node scripts/build-netlify.mjs",
-    "test:netlify": "node netlify-tests.mjs"
+    "validate": "node scripts/validate-artifact.mjs",
+    "predev": "npm run build",
+    "dev": "node --env-file-if-exists=.env scripts/dev-server.mjs",
+    "pretest": "npm run build",
+    "test": "node scripts/test.mjs",
+    "test:netlify": "node tests/netlify.test.mjs"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

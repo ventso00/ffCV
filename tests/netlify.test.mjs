@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import handler from './netlify/functions/scoutmetrics.mjs';
+import handler from '../netlify/functions/scoutmetrics.mjs';
 const req=path=>new Request('https://ffcv.example'+path);
 let r=await handler(req('/'),{ip:'home'});assert.equal(r.status,200);assert.ok(r.headers.get('content-security-policy'));assert.ok((await r.text()).includes('Profil en lecture seule.'));
 r=await handler(req('/api/v1/player/8678687120'),{ip:'josia'});const p=await r.json();assert.equal(p.nickname,'JosiaBira');assert.equal(p.live,false);assert.equal(p.characterImage,null);

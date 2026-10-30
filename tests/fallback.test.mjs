@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import worker from './worker/index.js';
+import worker from '../dist/server/index.js';
 let serial=0;
 const req=uid=>new Request('https://example.test/api/v1/player/'+uid,{headers:{'CF-Connecting-IP':'fallback-'+(++serial)}});
 const lookup=async(env={},uid='8678687120')=>worker.fetch(req(uid),env);
